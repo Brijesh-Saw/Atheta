@@ -4,7 +4,15 @@
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="wrap_content"
-    android:background="#E6DDDD">
+    android:padding="2dp"
+    android:background="#C1BBBB">
+
+    <View
+        android:layout_width="match_parent"
+        android:layout_height="1dp"
+        android:layout_above="@+id/name_user"
+        android:layout_marginBottom="5dp"
+        android:background="#EF3A3A" />
 
     <TextView
         android:id="@+id/name_user"
@@ -13,13 +21,12 @@
         tools:layout_editor_absoluteX="82dp"
         tools:layout_editor_absoluteY="53dp"
         android:elevation="5dp"
-        android:background="#FFFFFF"
+        android:background="#C1F1ED"
         android:padding="25dp"/>
     <View
         android:layout_width="match_parent"
-        android:layout_height="2dp"
+        android:layout_height="1dp"
         android:layout_below="@+id/name_user"
         android:layout_marginTop="5dp"
-        android:layout_marginBottom="5dp"
-        android:background="#C8C0C0" />
+        android:background="#EF3A3A" />
 </RelativeLayout>
