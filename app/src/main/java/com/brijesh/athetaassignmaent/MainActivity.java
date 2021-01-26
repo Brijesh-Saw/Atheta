@@ -7,69 +7,31 @@ import androidx.recyclerview.widget.RecyclerView;
 
 import android.content.Intent;
 import android.os.Bundle;
-import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
-import android.widget.Button;
-import android.widget.EditText;
-import android.widget.ProgressBar;
 import android.widget.TextView;
-import android.widget.Toast;
 
 import com.firebase.ui.firestore.FirestoreRecyclerAdapter;
 import com.firebase.ui.firestore.FirestoreRecyclerOptions;
-import com.google.android.gms.tasks.OnFailureListener;
-import com.google.android.gms.tasks.OnSuccessListener;
 import com.google.android.material.floatingactionbutton.FloatingActionButton;
 import com.google.firebase.firestore.CollectionReference;
-import com.google.firebase.firestore.DocumentReference;
-import com.google.firebase.firestore.DocumentSnapshot;
 import com.google.firebase.firestore.FirebaseFirestore;
-import com.google.firebase.firestore.Query;
-import com.google.firebase.firestore.QuerySnapshot;
-import com.google.firebase.firestore.auth.User;
-
-import org.w3c.dom.Document;
-
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.Queue;
 
 public class MainActivity extends AppCompatActivity {
-    FloatingActionButton Add;
-    RecyclerView mListView;
-    FirebaseFirestore db;
-    ArrayList<UserModel> dataList;
-    Adapter adapter;
+    private FloatingActionButton Add;
+    private RecyclerView mListView;
+    private FirebaseFirestore mFirestore;
+    private FirestoreRecyclerAdapter adapter;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
         Add = findViewById(R.id.add);
-        db = FirebaseFirestore.getInstance();
+        mFirestore = FirebaseFirestore.getInstance();
 
         mListView = (RecyclerView) findViewById(R.id.list_View);
-        mListView.setLayoutManager(new LinearLayoutManager(this));
-        dataList = new ArrayList<>();
-        adapter = new Adapter(dataList,getApplicationContext());
-        mListView.setAdapter(adapter);
-
-        db.collection("Users").get().addOnSuccessListener(new OnSuccessListener<QuerySnapshot>() {
-            @Override
-            public void onSuccess(QuerySnapshot queryDocumentSnapshots) {
-                List<DocumentSnapshot> list = queryDocumentSnapshots.getDocuments();
-                for(DocumentSnapshot data:list){
-                    UserModel userModel = data.toObject(UserModel.class);
-                    dataList.add(userModel);
-                }
-                //.................
-                adapter.notifyDataSetChanged();
-            }
-        });
 
 
 
@@ -80,5 +42,66 @@ public class MainActivity extends AppCompatActivity {
                 startActivity(intent);
             }
         });
+
+        //Query
+        CollectionReference ref = mFirestore.collection("Users");
+
+        //RecyclerView Assigning
+        FirestoreRecyclerOptions<UserModel> options = new FirestoreRecyclerOptions.Builder<UserModel>()
+                .setQuery(ref, UserModel.class)
+                .build();
+
+        adapter = new FirestoreRecyclerAdapter<UserModel, UserViewHolder>(options) {
+            @NonNull
+            @Override
+            public UserViewHolder onCreateViewHolder(@NonNull ViewGroup parent, int viewType) {
+                View view = LayoutInflater.from(parent.getContext()).inflate(R.layout.user_item,parent,false);
+                return new UserViewHolder(view);
+            }
+
+            @Override
+            protected void onBindViewHolder(@NonNull UserViewHolder holder, int position, @NonNull UserModel model) {
+                if(model.getFirst() != null) {
+                    holder.fullName.setText(model.getFirst());
+                    holder.itemView.setOnClickListener(new View.OnClickListener() {
+                        @Override
+                        public void onClick(View v) {
+                            Intent intent = new Intent(getApplicationContext(),userActivity.class);
+                            intent.putExtra("fname",model.getFirst());
+                            intent.putExtra("lname",model.getLast());
+                            intent.putExtra("phone",model.getPhone());
+                            intent.putExtra("add",model.getAdd());
+                            intent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK );
+                            startActivity(intent);
+                        }
+                    });
+                }
+            }
+        };
+
+        mListView.setHasFixedSize(true);
+        mListView.setLayoutManager(new LinearLayoutManager(this));
+        mListView.setAdapter(adapter);
+    }
+
+    private class UserViewHolder extends RecyclerView.ViewHolder{
+        TextView fullName;
+        public UserViewHolder(@NonNull View itemView) {
+            super(itemView);
+            fullName =itemView.findViewById(R.id.name_user);
+
+        }
+    }
+
+    @Override
+    protected void onStart() {
+        super.onStart();
+        adapter.startListening();
+    }
+
+    @Override
+    protected void onStop() {
+        super.onStop();
+        adapter.stopListening();
     }
 }
